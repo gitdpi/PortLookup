@@ -10,6 +10,7 @@ del *.class && javac PortLookupUtil.java && java PortLookupUtil
 
 打包命令
 ```
+del *.class
 javac PortLookupUtil.java
 jar cfm PortLookupUtil.jar MANIFEST.MF PortLookupUtil*.class
 ```
