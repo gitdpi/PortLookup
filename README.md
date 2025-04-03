@@ -14,6 +14,7 @@ del *.class
 javac PortLookupUtil.java
 jar cfm PortLookupUtil.jar MANIFEST.MF PortLookupUtil*.class
 ```
+双击 Start PortLookupUtil.vbs 脚本也可以运行
 
 运行命令
 ```
