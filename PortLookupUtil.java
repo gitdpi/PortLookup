@@ -490,6 +490,47 @@ public class PortLookupUtil {
     }
 
     /**
+     * 将 tasklist 的内存占用转换为便于阅读的形式。
+     * <p>
+     * tasklist 以 KB 为单位输出且带千位分隔符（如 "312,456 K"），数值较大时不便直接阅读，
+     * 因此按 KB / MB / GB 自动选择合适单位：不足 1 MB 显示 KB，不足 1 GB 显示 MB，否则显示 GB。
+     * 数值无法解析时原样返回，避免因格式意外变化而丢失信息。
+     *
+     * @param number tasklist 输出的内存数值，可能含千位分隔符（如 "4,852"）
+     * @param unit   单位后缀，取值 K / M / G，可能为空（tasklist 实际按 KB 输出）
+     */
+    private static String formatMemoryUsage(String number, String unit) {
+        String rawText = number + (unit.isEmpty() ? "" : " " + unit);
+
+        long value;
+        try {
+            value = Long.parseLong(number.replace(",", ""));
+        } catch (NumberFormatException e) {
+            return rawText; // 格式意外变化时保留原始文本
+        }
+
+        // 统一换算为 KB
+        String normalizedUnit = unit.isEmpty() ? "K" : unit.toUpperCase(Locale.ROOT);
+        double kilobytes;
+        if ("G".equals(normalizedUnit)) {
+            kilobytes = value * 1024.0 * 1024.0;
+        } else if ("M".equals(normalizedUnit)) {
+            kilobytes = value * 1024.0;
+        } else {
+            kilobytes = value; // K 或未知单位，按 KB 处理
+        }
+
+        if (kilobytes < 1024) {
+            return String.format(Locale.ROOT, "%d KB", Math.round(kilobytes));
+        }
+        double megabytes = kilobytes / 1024.0;
+        if (megabytes < 1024) {
+            return String.format(Locale.ROOT, "%.1f MB", megabytes);
+        }
+        return String.format(Locale.ROOT, "%.2f GB", megabytes / 1024.0);
+    }
+
+    /**
      * 查看占用指定 PID 的程序信息：在后台执行 tasklist，完成后弹出信息对话框。
      */
     private void viewProgram(final String pid) {
@@ -556,7 +597,7 @@ public class PortLookupUtil {
             String pidValue = matcher.group(2);
             String sessionName = matcher.group(3);
             String sessionNum = matcher.group(4);
-            String memUsage = matcher.group(5) + (matcher.group(6).isEmpty() ? "" : " " + matcher.group(6));
+            String memUsage = formatMemoryUsage(matcher.group(5), matcher.group(6));
             rows.add(new Object[]{imageName, pidValue, sessionName, sessionNum, memUsage});
         }
 
